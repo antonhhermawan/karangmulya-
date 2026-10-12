@@ -1,0 +1,6 @@
+{
+  "name": "Markas Rakyat Karangmulya",
+  "description": "Aplikasi pelayanan publik, administrasi surat online, pengaduan, aspirasi, dan informasi pembangunan Desa Karangmulya.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

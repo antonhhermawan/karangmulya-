@@ -1,0 +1,541 @@
+{
+  "entities": {
+    "AdminRecord": {
+      "title": "AdminRecord",
+      "description": "Trusted administrator and village staff registry keyed by UID.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the administrator."
+        },
+        "email": {
+          "type": "string",
+          "description": "Verified email address of the administrator."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when admin record was created (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["userId", "email", "createdAt"]
+    },
+    "CitizenRecord": {
+      "title": "CitizenRecord",
+      "description": "Citizen profile and village directory entry with protected NIK and KK.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "fullName": {
+          "type": "string",
+          "description": "Full legal name as on KTP."
+        },
+        "nik": {
+          "type": "string",
+          "description": "16-digit Nomor Induk Kependudukan (NIK)."
+        },
+        "kkNumber": {
+          "type": "string",
+          "description": "16-digit Nomor Kartu Keluarga (KK)."
+        },
+        "rtRw": {
+          "type": "string",
+          "description": "RT/RW neighborhood code (e.g. RT 02 / RW 01)."
+        },
+        "dusun": {
+          "type": "string",
+          "description": "Hamlet name in Desa Karangmulya."
+        },
+        "address": {
+          "type": "string",
+          "description": "Full residential address."
+        },
+        "phone": {
+          "type": "string",
+          "description": "Active WhatsApp/phone number."
+        },
+        "occupation": {
+          "type": "string",
+          "description": "Citizen occupation or position."
+        },
+        "directoryGroup": {
+          "type": "string",
+          "enum": ["WARGA", "STAFF_PELAYANAN", "KAUR_UMUM", "SEKRETARIS_DESA", "KEPALA_DESA"],
+          "description": "Directory grouping in Desa Karangmulya."
+        },
+        "verificationStatus": {
+          "type": "string",
+          "enum": ["MENUNGGU_VERIFIKASI", "TERVERIFIKASI", "DITOLAK"],
+          "description": "Verification status of the citizen profile."
+        },
+        "isSelfProfile": {
+          "type": "boolean",
+          "description": "Whether this record is the primary profile of the logged-in user."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "fullName",
+        "nik",
+        "kkNumber",
+        "rtRw",
+        "dusun",
+        "address",
+        "phone",
+        "occupation",
+        "directoryGroup",
+        "verificationStatus",
+        "isSelfProfile",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "LetterRequest": {
+      "title": "LetterRequest",
+      "description": "Online administrative village letter application with registration number and QR verification.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "regNumber": {
+          "type": "string",
+          "description": "Unique registration tracking number (e.g. SRT-2026-1001)."
+        },
+        "applicantName": {
+          "type": "string",
+          "description": "Full name of the citizen applying."
+        },
+        "applicantNik": {
+          "type": "string",
+          "description": "16-digit NIK of the applicant."
+        },
+        "letterType": {
+          "type": "string",
+          "description": "Type of administrative letter requested."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "Purpose/keperluan of the letter request."
+        },
+        "attachmentName": {
+          "type": "string",
+          "description": "Supporting document filename or label."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["DIAJUKAN", "DIVERIFIKASI", "DIPROSES", "SELESAI", "DITOLAK"],
+          "description": "Processing status of the letter request."
+        },
+        "staffNote": {
+          "type": "string",
+          "description": "Response note from village staff."
+        },
+        "qrCodeData": {
+          "type": "string",
+          "description": "QR Code verification payload string."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "regNumber",
+        "applicantName",
+        "applicantNik",
+        "letterType",
+        "purpose",
+        "attachmentName",
+        "status",
+        "staffNote",
+        "qrCodeData",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Complaint": {
+      "title": "Complaint",
+      "description": "Public complaint report with photo attachment label and GPS coordinates.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "regNumber": {
+          "type": "string",
+          "description": "Unique complaint tracking number (e.g. ADU-2026-2001)."
+        },
+        "reporterName": {
+          "type": "string",
+          "description": "Name of the reporting citizen."
+        },
+        "category": {
+          "type": "string",
+          "description": "Complaint category (Infrastruktur, Lingkungan, Pelayanan, Keamanan, Sosial)."
+        },
+        "title": {
+          "type": "string",
+          "description": "Short title of the complaint."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed chronological description of the issue."
+        },
+        "locationName": {
+          "type": "string",
+          "description": "Specific location description in Desa Karangmulya."
+        },
+        "latitude": {
+          "type": "number",
+          "description": "GPS latitude coordinate."
+        },
+        "longitude": {
+          "type": "number",
+          "description": "GPS longitude coordinate."
+        },
+        "photoLabel": {
+          "type": "string",
+          "description": "Attached photo URI or filename label."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["MENUNGGU", "DITINDAKLANJUTI", "SELESAI", "DITOLAK"],
+          "description": "Current resolution status."
+        },
+        "staffResponse": {
+          "type": "string",
+          "description": "Official response and follow-up note from village staff."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "regNumber",
+        "reporterName",
+        "category",
+        "title",
+        "description",
+        "locationName",
+        "latitude",
+        "longitude",
+        "photoLabel",
+        "status",
+        "staffResponse",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Aspiration": {
+      "title": "Aspiration",
+      "description": "Citizen aspiration, constructive criticism, and village development suggestion.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "regNumber": {
+          "type": "string",
+          "description": "Unique aspiration reference number (e.g. ASP-2026-3001)."
+        },
+        "senderName": {
+          "type": "string",
+          "description": "Name of the citizen submitting the aspiration."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category (Pembangunan, Ekonomi UMKM, Pendidikan, Kesehatan, Tata Kelola)."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the aspiration or suggestion."
+        },
+        "content": {
+          "type": "string",
+          "description": "Full aspiration details and proposed solution."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["DITERIMA", "DIKAJI_DESA", "DIREALISASIKAN"],
+          "description": "Review status by BPD and Pemerintah Desa."
+        },
+        "staffFeedback": {
+          "type": "string",
+          "description": "Response from village apparatus."
+        },
+        "upvotes": {
+          "type": "integer",
+          "description": "Support count from village review."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "regNumber",
+        "senderName",
+        "category",
+        "title",
+        "content",
+        "status",
+        "staffFeedback",
+        "upvotes",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "VillagePost": {
+      "title": "VillagePost",
+      "description": "Village news, official announcements, event agendas, and development project transparency records.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "postType": {
+          "type": "string",
+          "enum": ["BERITA", "PENGUMUMAN", "AGENDA", "PEMBANGUNAN"],
+          "description": "Type of village information entry."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the news, announcement, agenda, or project."
+        },
+        "category": {
+          "type": "string",
+          "description": "Sub-category label."
+        },
+        "summary": {
+          "type": "string",
+          "description": "Short summary for cards."
+        },
+        "content": {
+          "type": "string",
+          "description": "Detailed body content or project specification."
+        },
+        "eventDate": {
+          "type": "string",
+          "description": "Scheduled date/time or fiscal year period."
+        },
+        "location": {
+          "type": "string",
+          "description": "Location in Desa Karangmulya."
+        },
+        "budgetAmount": {
+          "type": "integer",
+          "description": "Allocated budget in IDR (for PEMBANGUNAN projects, 0 otherwise)."
+        },
+        "progressPercent": {
+          "type": "integer",
+          "description": "Physical realization percentage 0..100."
+        },
+        "statusLabel": {
+          "type": "string",
+          "description": "Display status label (e.g. Aktif, Terjadwal, Berjalan 75%, Selesai 100%)."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Authoring village official or unit."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "postType",
+        "title",
+        "category",
+        "summary",
+        "content",
+        "eventDate",
+        "location",
+        "budgetAmount",
+        "progressPercent",
+        "statusLabel",
+        "authorName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AppNotification": {
+      "title": "AppNotification",
+      "description": "Automatic in-app service notification and status update history.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Recipient Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "description": "Notification title."
+        },
+        "message": {
+          "type": "string",
+          "description": "Notification body text."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category (SURAT, PENGADUAN, ASPIRASI, VERIFIKASI, INFO)."
+        },
+        "referenceNumber": {
+          "type": "string",
+          "description": "Related registration number."
+        },
+        "isRead": {
+          "type": "boolean",
+          "description": "Whether the notification has been read."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Last update server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "message",
+        "category",
+        "referenceNumber",
+        "isRead",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Immutable system activity audit log for village governance transparency.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "actorName": {
+          "type": "string",
+          "description": "Name of the user or staff performing the action."
+        },
+        "actorRole": {
+          "type": "string",
+          "description": "Role label of the actor."
+        },
+        "actionType": {
+          "type": "string",
+          "description": "Action code (CREATE_SURAT, UPDATE_STATUS, VERIFY_WARGA, EXPORT_REPORT, etc.)."
+        },
+        "targetRef": {
+          "type": "string",
+          "description": "Target registration ID or entity reference."
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable audit description."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation server timestamp (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "actorName",
+        "actorRole",
+        "actionType",
+        "targetRef",
+        "description",
+        "createdAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": { "$ref": "#/entities/AdminRecord" },
+      "description": "Trusted administrator UIDs."
+    },
+    "/citizen_records/{recordId}": {
+      "schema": { "$ref": "#/entities/CitizenRecord" },
+      "description": "Citizen profile and village population/staff directory."
+    },
+    "/letter_requests/{letterId}": {
+      "schema": { "$ref": "#/entities/LetterRequest" },
+      "description": "Online administrative letter requests."
+    },
+    "/complaints/{complaintId}": {
+      "schema": { "$ref": "#/entities/Complaint" },
+      "description": "Citizen complaints with photo and location coordinates."
+    },
+    "/aspirations/{aspirationId}": {
+      "schema": { "$ref": "#/entities/Aspiration" },
+      "description": "Citizen aspirations, criticism, and suggestions."
+    },
+    "/village_posts/{postId}": {
+      "schema": { "$ref": "#/entities/VillagePost" },
+      "description": "Village news, announcements, agendas, and development projects."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/AppNotification" },
+      "description": "In-app notifications and service history."
+    },
+    "/audit_logs/{logId}": {
+      "schema": { "$ref": "#/entities/AuditLog" },
+      "description": "Immutable system activity audit logs."
+    }
+  }
+}

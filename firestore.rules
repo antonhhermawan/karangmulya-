@@ -1,0 +1,347 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Pillar 4.1: Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Core Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidTimestamp(ts) {
+      return ts is timestamp && ts <= request.time;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        (request.auth.token.email == 'antonhaerulhermawan@gmail.com' && request.auth.token.email_verified == true) ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    // 1. Validation Helpers
+    function isValidAdminRecord(data) {
+      return data.keys().hasAll(['userId', 'email', 'createdAt']) &&
+             data.keys().hasOnly(['userId', 'email', 'createdAt']) &&
+             data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.email is string && data.email.size() >= 3 && data.email.size() <= 150 &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    function isValidCitizenRecord(data) {
+      return data.keys().hasAll([
+               'userId', 'fullName', 'nik', 'kkNumber', 'rtRw', 'dusun',
+               'address', 'phone', 'occupation', 'directoryGroup',
+               'verificationStatus', 'isSelfProfile', 'createdAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'fullName', 'nik', 'kkNumber', 'rtRw', 'dusun',
+               'address', 'phone', 'occupation', 'directoryGroup',
+               'verificationStatus', 'isSelfProfile', 'createdAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.fullName is string && data.fullName.size() >= 2 && data.fullName.size() <= 100 &&
+             data.nik is string && data.nik.size() == 16 &&
+             data.kkNumber is string && data.kkNumber.size() == 16 &&
+             data.rtRw is string && data.rtRw.size() >= 1 && data.rtRw.size() <= 30 &&
+             data.dusun is string && data.dusun.size() >= 1 && data.dusun.size() <= 60 &&
+             data.address is string && data.address.size() >= 1 && data.address.size() <= 250 &&
+             data.phone is string && data.phone.size() >= 5 && data.phone.size() <= 30 &&
+             data.occupation is string && data.occupation.size() >= 1 && data.occupation.size() <= 80 &&
+             data.directoryGroup in ['WARGA', 'STAFF_PELAYANAN', 'KAUR_UMUM', 'SEKRETARIS_DESA', 'KEPALA_DESA'] &&
+             data.verificationStatus in ['MENUNGGU_VERIFIKASI', 'TERVERIFIKASI', 'DITOLAK'] &&
+             data.isSelfProfile is bool &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidLetterRequest(data) {
+      return data.keys().hasAll([
+               'userId', 'regNumber', 'applicantName', 'applicantNik',
+               'letterType', 'purpose', 'attachmentName', 'status',
+               'staffNote', 'qrCodeData', 'createdAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'regNumber', 'applicantName', 'applicantNik',
+               'letterType', 'purpose', 'attachmentName', 'status',
+               'staffNote', 'qrCodeData', 'createdAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.regNumber is string && data.regNumber.size() >= 3 && data.regNumber.size() <= 40 &&
+             data.applicantName is string && data.applicantName.size() >= 2 && data.applicantName.size() <= 100 &&
+             data.applicantNik is string && data.applicantNik.size() == 16 &&
+             data.letterType is string && data.letterType.size() >= 3 && data.letterType.size() <= 100 &&
+             data.purpose is string && data.purpose.size() >= 3 && data.purpose.size() <= 500 &&
+             data.attachmentName is string && data.attachmentName.size() <= 150 &&
+             data.status in ['DIAJUKAN', 'DIVERIFIKASI', 'DIPROSES', 'SELESAI', 'DITOLAK'] &&
+             data.staffNote is string && data.staffNote.size() <= 500 &&
+             data.qrCodeData is string && data.qrCodeData.size() >= 3 && data.qrCodeData.size() <= 120 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidComplaint(data) {
+      return data.keys().hasAll([
+               'userId', 'regNumber', 'reporterName', 'category', 'title',
+               'description', 'locationName', 'latitude', 'longitude',
+               'photoLabel', 'status', 'staffResponse', 'createdAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'regNumber', 'reporterName', 'category', 'title',
+               'description', 'locationName', 'latitude', 'longitude',
+               'photoLabel', 'status', 'staffResponse', 'createdAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.regNumber is string && data.regNumber.size() >= 3 && data.regNumber.size() <= 40 &&
+             data.reporterName is string && data.reporterName.size() >= 2 && data.reporterName.size() <= 100 &&
+             data.category is string && data.category.size() >= 2 && data.category.size() <= 60 &&
+             data.title is string && data.title.size() >= 3 && data.title.size() <= 150 &&
+             data.description is string && data.description.size() >= 3 && data.description.size() <= 1000 &&
+             data.locationName is string && data.locationName.size() >= 2 && data.locationName.size() <= 150 &&
+             (data.latitude is int || data.latitude is float) &&
+             (data.longitude is int || data.longitude is float) &&
+             data.photoLabel is string && data.photoLabel.size() <= 200 &&
+             data.status in ['MENUNGGU', 'DITINDAKLANJUTI', 'SELESAI', 'DITOLAK'] &&
+             data.staffResponse is string && data.staffResponse.size() <= 500 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidAspiration(data) {
+      return data.keys().hasAll([
+               'userId', 'regNumber', 'senderName', 'category', 'title',
+               'content', 'status', 'staffFeedback', 'upvotes', 'createdAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'regNumber', 'senderName', 'category', 'title',
+               'content', 'status', 'staffFeedback', 'upvotes', 'createdAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.regNumber is string && data.regNumber.size() >= 3 && data.regNumber.size() <= 40 &&
+             data.senderName is string && data.senderName.size() >= 2 && data.senderName.size() <= 100 &&
+             data.category is string && data.category.size() >= 2 && data.category.size() <= 60 &&
+             data.title is string && data.title.size() >= 3 && data.title.size() <= 150 &&
+             data.content is string && data.content.size() >= 3 && data.content.size() <= 1000 &&
+             data.status in ['DITERIMA', 'DIKAJI_DESA', 'DIREALISASIKAN'] &&
+             data.staffFeedback is string && data.staffFeedback.size() <= 500 &&
+             data.upvotes is int && data.upvotes >= 0 && data.upvotes <= 100000 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidVillagePost(data) {
+      return data.keys().hasAll([
+               'userId', 'postType', 'title', 'category', 'summary', 'content',
+               'eventDate', 'location', 'budgetAmount', 'progressPercent',
+               'statusLabel', 'authorName', 'createdAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'postType', 'title', 'category', 'summary', 'content',
+               'eventDate', 'location', 'budgetAmount', 'progressPercent',
+               'statusLabel', 'authorName', 'createdAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.postType in ['BERITA', 'PENGUMUMAN', 'AGENDA', 'PEMBANGUNAN'] &&
+             data.title is string && data.title.size() >= 3 && data.title.size() <= 150 &&
+             data.category is string && data.category.size() >= 2 && data.category.size() <= 60 &&
+             data.summary is string && data.summary.size() >= 3 && data.summary.size() <= 300 &&
+             data.content is string && data.content.size() >= 3 && data.content.size() <= 2000 &&
+             data.eventDate is string && data.eventDate.size() <= 60 &&
+             data.location is string && data.location.size() <= 150 &&
+             data.budgetAmount is int && data.budgetAmount >= 0 &&
+             data.progressPercent is int && data.progressPercent >= 0 && data.progressPercent <= 100 &&
+             data.statusLabel is string && data.statusLabel.size() <= 60 &&
+             data.authorName is string && data.authorName.size() >= 2 && data.authorName.size() <= 100 &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidAppNotification(data) {
+      return data.keys().hasAll([
+               'userId', 'title', 'message', 'category',
+               'referenceNumber', 'isRead', 'createdAt', 'updatedAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'title', 'message', 'category',
+               'referenceNumber', 'isRead', 'createdAt', 'updatedAt'
+             ]) &&
+             data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.title is string && data.title.size() >= 2 && data.title.size() <= 150 &&
+             data.message is string && data.message.size() >= 2 && data.message.size() <= 500 &&
+             data.category is string && data.category.size() >= 2 && data.category.size() <= 50 &&
+             data.referenceNumber is string && data.referenceNumber.size() <= 50 &&
+             data.isRead is bool &&
+             isValidTimestamp(data.createdAt) &&
+             isValidTimestamp(data.updatedAt);
+    }
+
+    function isValidAuditLog(data) {
+      return data.keys().hasAll([
+               'userId', 'actorName', 'actorRole', 'actionType',
+               'targetRef', 'description', 'createdAt'
+             ]) &&
+             data.keys().hasOnly([
+               'userId', 'actorName', 'actorRole', 'actionType',
+               'targetRef', 'description', 'createdAt'
+             ]) &&
+             data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 &&
+             data.actorName is string && data.actorName.size() >= 2 && data.actorName.size() <= 100 &&
+             data.actorRole is string && data.actorRole.size() >= 2 && data.actorRole.size() <= 60 &&
+             data.actionType is string && data.actionType.size() >= 2 && data.actionType.size() <= 80 &&
+             data.targetRef is string && data.targetRef.size() <= 80 &&
+             data.description is string && data.description.size() >= 2 && data.description.size() <= 500 &&
+             isValidTimestamp(data.createdAt);
+    }
+
+    // Collection 1: /admins/{adminId}
+    match /admins/{adminId} {
+      allow get: if isSignedIn() && isValidId(adminId) && (request.auth.uid == adminId || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(adminId) && isValidAdminRecord(incoming()) && isAdmin();
+      allow update: if isSignedIn() && isValidId(adminId) && isValidAdminRecord(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isAdmin() &&
+                       incoming().diff(existing()).affectedKeys().hasOnly(['email']);
+      allow delete: if isSignedIn() && isValidId(adminId) && isAdmin();
+    }
+
+    // Collection 2: /citizen_records/{recordId}
+    match /citizen_records/{recordId} {
+      allow get: if isSignedIn() && isValidId(recordId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(recordId) && isValidCitizenRecord(incoming()) &&
+                       incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(recordId) && isValidCitizenRecord(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       (existing().userId == request.auth.uid || isAdmin()) && (
+                         // Action 1: Profile & directory update
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'fullName', 'nik', 'kkNumber', 'rtRw', 'dusun',
+                           'address', 'phone', 'occupation', 'directoryGroup',
+                           'verificationStatus', 'updatedAt'
+                         ]) ||
+                         isAdmin()
+                       );
+      allow delete: if isSignedIn() && isValidId(recordId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Collection 3: /letter_requests/{letterId}
+    match /letter_requests/{letterId} {
+      allow get: if isSignedIn() && isValidId(letterId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(letterId) && isValidLetterRequest(incoming()) &&
+                       incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(letterId) && isValidLetterRequest(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().regNumber == existing().regNumber &&
+                       (existing().status != 'DITOLAK' || isAdmin()) &&
+                       (existing().userId == request.auth.uid || isAdmin()) && (
+                         // Action 1: Status & staff note update
+                         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'staffNote', 'updatedAt']) ||
+                         // Action 2: Applicant details edit while DIAJUKAN
+                         (existing().status == 'DIAJUKAN' && incoming().diff(existing()).affectedKeys().hasOnly([
+                           'purpose', 'attachmentName', 'updatedAt'
+                         ])) ||
+                         isAdmin()
+                       );
+      allow delete: if isSignedIn() && isValidId(letterId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Collection 4: /complaints/{complaintId}
+    match /complaints/{complaintId} {
+      allow get: if isSignedIn() && isValidId(complaintId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(complaintId) && isValidComplaint(incoming()) &&
+                       incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(complaintId) && isValidComplaint(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().regNumber == existing().regNumber &&
+                       (existing().status != 'DITOLAK' || isAdmin()) &&
+                       (existing().userId == request.auth.uid || isAdmin()) && (
+                         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'staffResponse', 'updatedAt']) ||
+                         isAdmin()
+                       );
+      allow delete: if isSignedIn() && isValidId(complaintId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Collection 5: /aspirations/{aspirationId}
+    match /aspirations/{aspirationId} {
+      allow get: if isSignedIn() && isValidId(aspirationId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(aspirationId) && isValidAspiration(incoming()) &&
+                       incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(aspirationId) && isValidAspiration(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       incoming().regNumber == existing().regNumber &&
+                       (existing().userId == request.auth.uid || isAdmin()) && (
+                         incoming().diff(existing()).affectedKeys().hasOnly(['status', 'staffFeedback', 'upvotes', 'updatedAt']) ||
+                         isAdmin()
+                       );
+      allow delete: if isSignedIn() && isValidId(aspirationId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Collection 6: /village_posts/{postId}
+    match /village_posts/{postId} {
+      allow get: if isSignedIn() && isValidId(postId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(postId) && isValidVillagePost(incoming()) &&
+                       incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(postId) && isValidVillagePost(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       (existing().userId == request.auth.uid || isAdmin()) && (
+                         incoming().diff(existing()).affectedKeys().hasOnly([
+                           'title', 'category', 'summary', 'content', 'eventDate',
+                           'location', 'budgetAmount', 'progressPercent', 'statusLabel', 'updatedAt'
+                         ]) ||
+                         isAdmin()
+                       );
+      allow delete: if isSignedIn() && isValidId(postId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Collection 7: /notifications/{notificationId}
+    match /notifications/{notificationId} {
+      allow get: if isSignedIn() && isValidId(notificationId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(notificationId) && isValidAppNotification(incoming()) &&
+                       incoming().userId == request.auth.uid;
+      allow update: if isSignedIn() && isValidId(notificationId) && isValidAppNotification(incoming()) &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       (existing().userId == request.auth.uid || isAdmin()) && (
+                         incoming().diff(existing()).affectedKeys().hasOnly(['isRead', 'updatedAt']) ||
+                         isAdmin()
+                       );
+      allow delete: if isSignedIn() && isValidId(notificationId) && (existing().userId == request.auth.uid || isAdmin());
+    }
+
+    // Collection 8: /audit_logs/{logId}
+    match /audit_logs/{logId} {
+      allow get: if isSignedIn() && isValidId(logId) && (existing().userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && isValidId(logId) && isValidAuditLog(incoming()) &&
+                       incoming().userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+  }
+}
